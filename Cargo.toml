@@ -1,0 +1,8 @@
+[package]
+name = "mis-inst"
+version = "2.0.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+uuid = { version = "1.10", features = ["v4"] }
