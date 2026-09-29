@@ -67,26 +67,27 @@
     </style>
 </head>
 <body>
-    <h1>mis-inst <span class="badge">v3.3.2</span></h1>
-    <p><strong>mis-inst (mis Installer)</strong> — консольная утилита на Rust для автоматической генерации нативных <code>.msi</code> инсталляторов Windows с использованием WiX Toolset v4/v7.</p>
+    <h1>mis-inst <span class="badge">v3.5.2</span></h1>
+    <p><strong>mis-inst (mis Installer)</strong> — консольная утилита на Rust для автоматической генерации и нативной сборки <code>.msi</code> инсталляторов Windows через WiX Toolset v4.</p>
     
     <h2>⚡ Особенности</h2>
     <ul>
         <li><strong>Embedded CAB:</strong> Архив с файлами дистрибутива вшивается прямо внутрь <code>.msi</code> пакета.</li>
-        <li><strong>UI Wizard:</strong> Полноценный мастер установки на базе <code>WixToolset.UI.wixext</code>.</li>
+        <li><strong>Темы оформления:</strong> <code>classic</code> (классический синий стиль WiX v3 / Advanced Installer с боковой панелью), <code>red</code> (красный стиль) или <code>photo</code> (собственное изображение).</li>
+        <li><strong>Упаковка доп. файлов:</strong> Включение любых сопутствующих файлов (<code>.dll</code>, <code>.json</code>, <code>.db</code>) через флаг <code>-e / --extra</code>.</li>
         <li><strong>Поддержка кириллицы:</strong> Корректная обработка русских путей и имён (<code>Language="1049"</code>, <code>Codepage="1251"</code>).</li>
         <li><strong>Автогенерация GUID:</strong> Динамическое формирование уникальных <code>UpgradeCode</code> и <code>Component GUID</code> через <code>uuid</code>.</li>
+        <li><strong>Автоочистка:</strong> Удаление всех временных <code>.wxs</code>, <code>.wixpdb</code> и автосгенерированных <code>.bmp</code> файлов сразу после сборки.</li>
     </ul>
 
     <h2>🛠 Системные требования</h2>
     <ul>
         <li>ОС Windows 10 / 11 (x64)</li>
-        <li>.NET SDK (для работы WiX)</li>
-        <li>WiX Toolset v4+: <code>dotnet tool install --global wix</code></li>
+        <li>WiX Toolset v4+ (с установленным расширением UI): <code>wix extension add WixToolset.UI.wixext</code></li>
     </ul>
 
     <h2>📋 Синтаксис CLI</h2>
-    <pre><code>mis-inst.exe &lt;INPUT&gt; &lt;OUTPUT&gt; &lt;NAME&gt; [-t &lt;THEME&gt;]</code></pre>
+    <pre><code>mis-inst.exe &lt;INPUT&gt; &lt;OUTPUT&gt; &lt;NAME&gt; [-d &lt;DEVELOPER&gt;] [-t &lt;THEME...&gt;] [-e &lt;FILES...&gt;]</code></pre>
 
     <table>
         <thead>
@@ -100,12 +101,12 @@
             <tr>
                 <td><code>&lt;INPUT&gt;</code></td>
                 <td>Позиционный (1)</td>
-                <td>Путь к исходному файлу (<code>.exe</code>, <code>.apk</code> и др.).</td>
+                <td>Путь к основному исполняемому файлу (<code>.exe</code>).</td>
             </tr>
             <tr>
                 <td><code>&lt;OUTPUT&gt;</code></td>
                 <td>Позиционный (2)</td>
-                <td>Имя создаваемого <code>.msi</code> пакета.</td>
+                <td>Имя или путь создаваемого <code>.msi</code> пакета.</td>
             </tr>
             <tr>
                 <td><code>&lt;NAME&gt;</code></td>
@@ -113,23 +114,40 @@
                 <td>Название программы в мастере установки.</td>
             </tr>
             <tr>
+                <td><code>-d, --developer</code></td>
+                <td>Опциональный</td>
+                <td>Имя издателя / разработчика (по умолчанию: <code>"Developer Studio"</code>).</td>
+            </tr>
+            <tr>
                 <td><code>-t, --theme</code></td>
                 <td>Опциональный</td>
-                <td>Тема оформления: <code>classic</code>, <code>red</code>, или <code>photo &lt;path&gt;</code>.</td>
+                <td>Тема оформления: <code>classic</code>, <code>red</code>, или <code>photo &lt;path&gt;</code> (по умолчанию: <code>classic</code>).</td>
+            </tr>
+            <tr>
+                <td><code>-e, --extra</code></td>
+                <td>Опциональный</td>
+                <td>Список дополнительных файлов для включения в установщик.</td>
             </tr>
         </tbody>
     </table>
 
     <h2>💡 Примеры использования</h2>
-    <pre><code># Базовая сборка
-mis-inst.exe my_app.exe Setup.msi "My Super App"
+    <pre><code># Базовая сборка (синяя классическая тема)
+mis-inst.exe JokerUnlocker.exe Setup.msi "Joker Unlocker"
+
+# Указание разработчика и дополнительных файлов
+mis-inst.exe SilenceRemover.exe SilenceRemoverSetup.msi "Silence Remover" -d "Mako Dev" -e ffmpeg.exe config.json
 
 # Красная тема оформления
-mis-inst.exe app-release.apk DRON.msi "DRON Simulator" -t red</code></pre>
+mis-inst.exe app.exe setup.msi "My Application" -t red
+
+# Кастомная фоновая картинка
+mis-inst.exe app.exe setup.msi "My Application" -t photo "C:\Images\banner.bmp"</code></pre>
 
     <h2>❓ Решение проблем</h2>
     <div class="note">
         <p><strong>Файл весит 0 КБ:</strong> Завершите зависший процесс установки через <code>taskkill /F /IM msiexec.exe</code>.</p>
+        <p><strong>Ошибка сборки WiX UI:</strong> Убедитесь, что установлено расширение UI: <code>wix extension add WixToolset.UI.wixext</code>.</p>
         <p><strong>Бинарник 0 КБ при сборке Cargo:</strong> Выполните <code>cargo clean</code>, затем <code>cargo build --release</code>.</p>
     </div>
 </body>
