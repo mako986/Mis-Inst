@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mis-inst (mis Installer) — Документация</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #c9d1d9;
+            background-color: #0d1117;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        h1, h2, h3 { color: #f0f6fc; border-bottom: 1px solid #30363d; padding-bottom: 0.3em; margin-top: 1.5em; }
+        h1 { font-size: 2.2rem; margin-top: 0; margin-bottom: 0.5rem; }
+        p { margin: 0.8rem 0; }
+        code {
+            background-color: #161b22;
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+            font-size: 88%;
+            color: #79c0ff;
+        }
+        pre {
+            background-color: #161b22;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid #30363d;
+        }
+        pre code { background: none; padding: 0; color: #e6edf3; font-size: 90%; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0;
+        }
+        th, td {
+            border: 1px solid #30363d;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        th { background-color: #161b22; color: #f0f6fc; }
+        tr:nth-child(even) { background-color: #161b22; }
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.4rem; }
+        .badge {
+            display: inline-block;
+            padding: 0.2em 0.6em;
+            font-size: 70%;
+            font-weight: 600;
+            border-radius: 20px;
+            background-color: #238636;
+            color: #ffffff;
+            vertical-align: middle;
+        }
+        .note {
+            background-color: #161b22;
+            border-left: 4px solid #1f6beb;
+            padding: 0.8rem 1rem;
+            margin: 1rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>mis-inst <span class="badge">v3.3.2</span></h1>
+    <p><strong>mis-inst (mis Installer)</strong> — консольная утилита на Rust для автоматической генерации нативных <code>.msi</code> инсталляторов Windows с использованием WiX Toolset v4/v7.</p>
+    
+    <h2>⚡ Особенности</h2>
+    <ul>
+        <li><strong>Embedded CAB:</strong> Архив с файлами дистрибутива вшивается прямо внутрь <code>.msi</code> пакета.</li>
+        <li><strong>UI Wizard:</strong> Полноценный мастер установки на базе <code>WixToolset.UI.wixext</code>.</li>
+        <li><strong>Поддержка кириллицы:</strong> Корректная обработка русских путей и имён (<code>Language="1049"</code>, <code>Codepage="1251"</code>).</li>
+        <li><strong>Автогенерация GUID:</strong> Динамическое формирование уникальных <code>UpgradeCode</code> и <code>Component GUID</code> через <code>uuid</code>.</li>
+    </ul>
+
+    <h2>🛠 Системные требования</h2>
+    <ul>
+        <li>ОС Windows 10 / 11 (x64)</li>
+        <li>.NET SDK (для работы WiX)</li>
+        <li>WiX Toolset v4+: <code>dotnet tool install --global wix</code></li>
+    </ul>
+
+    <h2>📋 Синтаксис CLI</h2>
+    <pre><code>mis-inst.exe &lt;INPUT&gt; &lt;OUTPUT&gt; &lt;NAME&gt; [-t &lt;THEME&gt;]</code></pre>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Параметр</th>
+                <th>Тип</th>
+                <th>Описание</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>&lt;INPUT&gt;</code></td>
+                <td>Позиционный (1)</td>
+                <td>Путь к исходному файлу (<code>.exe</code>, <code>.apk</code> и др.).</td>
+            </tr>
+            <tr>
+                <td><code>&lt;OUTPUT&gt;</code></td>
+                <td>Позиционный (2)</td>
+                <td>Имя создаваемого <code>.msi</code> пакета.</td>
+            </tr>
+            <tr>
+                <td><code>&lt;NAME&gt;</code></td>
+                <td>Позиционный (3)</td>
+                <td>Название программы в мастере установки.</td>
+            </tr>
+            <tr>
+                <td><code>-t, --theme</code></td>
+                <td>Опциональный</td>
+                <td>Тема оформления: <code>classic</code>, <code>red</code>, или <code>photo &lt;path&gt;</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>💡 Примеры использования</h2>
+    <pre><code># Базовая сборка
+mis-inst.exe my_app.exe Setup.msi "My Super App"
+
+# Красная тема оформления
+mis-inst.exe app-release.apk DRON.msi "DRON Simulator" -t red</code></pre>
+
+    <h2>❓ Решение проблем</h2>
+    <div class="note">
+        <p><strong>Файл весит 0 КБ:</strong> Завершите зависший процесс установки через <code>taskkill /F /IM msiexec.exe</code>.</p>
+        <p><strong>Бинарник 0 КБ при сборке Cargo:</strong> Выполните <code>cargo clean</code>, затем <code>cargo build --release</code>.</p>
+    </div>
+</body>
+</html>
